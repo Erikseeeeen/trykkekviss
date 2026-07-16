@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trykkekviss administrasjon</title>
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="/admin.js"></script>
+  </head>
+  <body>
+    <main class="app-shell admin-shell">
+      <header class="topbar">
+        <div>
+          <h1>Trykkekviss</h1>
+          <p id="adminStatus" class="muted">Administrasjon</p>
+        </div>
+        <a class="admin-link" href="/">Deltaker</a>
+      </header>
+
+      <section class="toolbar" aria-label="Quizoppsett">
+        <label>
+          Adminnøkkel
+          <input id="adminKey" type="password" autocomplete="current-password">
+        </label>
+        <label>
+          Quiz
+          <input id="quizSlug" autocomplete="off" value="kreta">
+        </label>
+        <label>
+          Tittel
+          <input id="quizTitle" autocomplete="off" value="Kreta">
+        </label>
+        <label>
+          Rom
+          <input id="roomCode" autocomplete="off" value="main">
+        </label>
+        <button id="loadQuiz" type="button">Last inn</button>
+        <button id="sampleQuiz" type="button" class="secondary">Legg inn eksempel</button>
+      </section>
+
+      <div class="admin-grid">
+        <section class="panel">
+          <div class="section-title">
+            <h2>Romstyring</h2>
+            <p id="liveState" class="badge">Stengt</p>
+          </div>
+
+          <label>
+            Aktivt spørsmål
+            <select id="questionSelect"></select>
+          </label>
+
+          <div class="button-row">
+            <button id="voteRoom" type="button" class="secondary">Stem</button>
+            <button id="revealRoom" type="button" class="secondary">Vis fasit</button>
+            <button id="clearGuesses" type="button" class="danger">Tøm svar</button>
+          </div>
+
+          <div class="stats-line">
+            <span id="submissionCount">0 levert</span>
+            <span id="correctCount">0 riktige</span>
+          </div>
+
+          <div id="liveMap" class="map-stage compact hidden"></div>
+          <div id="liveFibbage" class="fibbage-stage hidden"></div>
+
+          <ol id="guessList" class="guess-list"></ol>
+
+          <div class="leaderboard">
+            <h3>Poengtavle</h3>
+            <ol id="leaderboardList" class="leaderboard-list"></ol>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title">
+            <div>
+              <h2>Spørsmålsredigering</h2>
+              <p id="builderSummary" class="muted">Nytt kartspørsmål</p>
+            </div>
+            <div class="button-row">
+              <button id="editQuestion" type="button" class="secondary">Rediger valgt</button>
+              <button id="newQuestion" type="button" class="secondary">Ny</button>
+            </div>
+          </div>
+
+          <label>
+            Spørsmålstekst
+            <input id="prompt" autocomplete="off" placeholder="Hvor ligger Knossos?">
+          </label>
+
+          <div class="segmented" role="group" aria-label="Spørsmålstype">
+            <button data-question-type="map-location" type="button" class="active">Kart</button>
+            <button data-question-type="fibbage" type="button">Fibbage</button>
+          </div>
+
+          <div id="mapBuilder" class="builder-block">
+            <div class="map-field-grid">
+              <label>
+                Senter breddegrad
+                <input id="mapCenterLat" type="number" step="0.0001" value="35.24">
+              </label>
+              <label>
+                Senter lengdegrad
+                <input id="mapCenterLng" type="number" step="0.0001" value="25.16">
+              </label>
+              <label>
+                Zoomnivå
+                <input id="mapZoom" type="number" min="1" max="19" step="0.1" value="11">
+              </label>
+              <label>
+                Toleranse (km)
+                <input id="mapToleranceKm" type="number" min="0.1" step="0.1" value="8">
+              </label>
+            </div>
+            <div class="button-row">
+              <button id="loadBuilderMap" type="button" class="secondary">Bruk visning</button>
+              <button id="useCorrectAsCenter" type="button" class="secondary">Bruk fasit som senter</button>
+            </div>
+            <div id="builderMap" class="map-stage editor-stage"></div>
+            <p id="mapCorrectSummary" class="muted">Fasit ikke satt.</p>
+          </div>
+
+          <div id="fibbageBuilder" class="builder-block hidden">
+            <label>
+              Riktig svar
+              <input id="fibbageTruth" autocomplete="off" placeholder="Zeus">
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="saveQuestion" type="button">Lagre</button>
+            <span id="builderMessage" class="muted">Kartfasit ikke satt.</span>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trykkekviss</title>
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="/participant.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Trykkekviss</h1>
+        </div>
+      </header>
+
+      <section id="playerSetup" class="toolbar" aria-label="Deltakeroppsett">
+        <label>
+          Navn
+          <input id="playerName" autocomplete="name" placeholder="Ditt navn">
+        </label>
+        <button id="joinButton" type="button">Bli med</button>
+        <span id="setupMessage" class="muted"></span>
+      </section>
+
+      <section id="questionArea" class="question-area hidden">
+        <div class="question-header">
+          <div>
+            <h2 id="questionPrompt">Ingen aktivt spørsmål</h2>
+          </div>
+          <div id="answerCount" class="count">0 svar</div>
+        </div>
+
+        <div id="mapStage" class="map-stage hidden"></div>
+        <div id="fibbageStage" class="fibbage-stage hidden"></div>
+
+        <div class="actions">
+          <button id="submitGuess" type="button" disabled>Send</button>
+          <span id="playerMessage" class="muted"></span>
+        </div>
+
+        <div class="leaderboard">
+          <h3>Poengtavle</h3>
+          <ol id="leaderboardList" class="leaderboard-list"></ol>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

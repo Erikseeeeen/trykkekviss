@@ -1,0 +1,16 @@
+{
+  "name": "trykkekviss",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev public --d1=DB --compatibility-date=2026-07-14",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.110.0"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  }
+}

@@ -1,0 +1,565 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f7f8;
+  --panel: #ffffff;
+  --panel-muted: #fafbfc;
+  --ink: #172026;
+  --muted: #657282;
+  --line: #d4dae1;
+  --line-strong: #b8c2cc;
+  --accent: #146c6f;
+  --accent-strong: #0b5659;
+  --accent-soft: #e6f3f2;
+  --amber: #9a650d;
+  --danger: #a33838;
+  --danger-soft: #f8eeee;
+  --good: #23784f;
+  --good-soft: #e9f6ef;
+  --info: #245fbd;
+  --info-soft: #e9f0ff;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+.admin-link {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 650;
+  padding: 0 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+button:hover,
+.admin-link:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+button:focus-visible,
+.admin-link:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(20, 108, 111, 0.18);
+  outline-offset: 1px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button.secondary,
+.admin-link {
+  background: #fff;
+  border-color: var(--line-strong);
+  color: #26313d;
+}
+
+button.secondary:hover,
+.admin-link:hover {
+  background: var(--panel-muted);
+  border-color: #9da8b4;
+  color: #111820;
+}
+
+button.danger {
+  background: #fff;
+  border-color: #d9a6a6;
+  color: var(--danger);
+}
+
+button.danger:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+label {
+  display: grid;
+  gap: 5px;
+  color: #4f5d6d;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  padding: 8px 10px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #97a2af;
+}
+
+textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.45rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+h3 {
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.app-shell {
+  width: min(1220px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 20px 0 36px;
+}
+
+.admin-shell {
+  width: min(1280px, calc(100% - 32px));
+}
+
+.topbar,
+.toolbar,
+.question-header,
+.section-title,
+.actions,
+.button-row,
+.stats-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar {
+  min-height: 54px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar > div {
+  display: grid;
+  gap: 2px;
+}
+
+.toolbar {
+  flex-wrap: wrap;
+  align-items: end;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.toolbar label {
+  min-width: 138px;
+  flex: 1;
+}
+
+.question-area,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.question-header,
+.section-title {
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.question-header > div,
+.section-title > div {
+  min-width: 0;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.94fr) minmax(420px, 1.06fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.panel,
+.builder-block,
+.fibbage-stage,
+.fibbage-list ol {
+  display: grid;
+  gap: 12px;
+}
+
+.button-row,
+.actions,
+.fibbage-meta {
+  flex-wrap: wrap;
+}
+
+.actions {
+  min-height: 40px;
+}
+
+.stats-line {
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.stats-line span {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-muted);
+  padding: 5px 9px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f0f2f4;
+  color: #4b5563;
+  font-size: 0.74rem;
+  font-weight: 750;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.badge.open {
+  background: var(--good-soft);
+  border-color: #c4e6d3;
+  color: var(--good);
+}
+
+.badge.voting {
+  background: var(--info-soft);
+  border-color: #cbd9ff;
+  color: var(--info);
+}
+
+.badge.revealing {
+  background: #fff5df;
+  border-color: #edd59a;
+  color: var(--amber);
+}
+
+.badge.revealed {
+  background: #fff5df;
+  border-color: #edd59a;
+  color: var(--amber);
+}
+
+.count {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-stage {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #dde7df;
+}
+
+.map-stage.compact {
+  aspect-ratio: 1 / 1;
+}
+
+.editor-stage {
+  cursor: crosshair;
+}
+
+.leaflet-container {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.player-answer-icon {
+  background: transparent;
+  border: 0;
+}
+
+.player-answer-dot {
+  display: flex;
+  width: 58px;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--player-color, var(--accent));
+  box-shadow:
+    0 0 0 3px var(--answer-status-color, var(--line-strong)),
+    0 3px 10px rgba(17, 24, 39, 0.28);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.05;
+  padding: 5px;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.32);
+}
+
+.player-answer-dot span {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.guess-list {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  padding-left: 20px;
+}
+
+.guess-list li {
+  padding: 3px 0;
+}
+
+.guess-list .correct {
+  color: var(--good);
+}
+
+.guess-list .wrong {
+  color: var(--danger);
+}
+
+.map-field-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.segmented button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #344253;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--line);
+}
+
+.segmented button:hover {
+  background: var(--panel-muted);
+  color: var(--ink);
+}
+
+.segmented button.active {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.fibbage-stage {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-muted);
+  padding: 12px;
+}
+
+.fibbage-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.fibbage-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.fibbage-choice,
+.fibbage-card,
+.fibbage-list {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  padding: 10px;
+}
+
+button.fibbage-choice {
+  min-height: 68px;
+  align-items: start;
+  justify-content: start;
+  text-align: left;
+  white-space: normal;
+}
+
+button.fibbage-choice:hover {
+  border-color: var(--accent);
+  background: #f3fafa;
+  color: var(--ink);
+}
+
+.fibbage-choice.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(20, 108, 111, 0.14);
+}
+
+.fibbage-choice.correct,
+.fibbage-card.correct {
+  border-color: #afd7c1;
+  background: var(--good-soft);
+}
+
+.fibbage-choice.popped {
+  border-color: #d8c392;
+  background: #fff9ea;
+}
+
+.fibbage-voters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fibbage-voter {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--player-color, #657282) 42%, #ffffff);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--player-color, #657282) 13%, #ffffff);
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 2px 8px;
+}
+
+.fibbage-list ol {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell,
+  .admin-shell {
+    width: min(100% - 18px, 1280px);
+    padding-top: 12px;
+  }
+
+  .topbar,
+  .question-header,
+  .section-title,
+  .stats-line {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .map-field-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .toolbar label,
+  .toolbar button,
+  .actions button,
+  .button-row button {
+    width: 100%;
+  }
+}
