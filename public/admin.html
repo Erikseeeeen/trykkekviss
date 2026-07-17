@@ -3,20 +3,20 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Trykkekviss administrasjon</title>
-    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
-    <link rel="stylesheet" href="/styles.css">
-    <script src="/vendor/leaflet/leaflet.js"></script>
-    <script type="module" src="/admin.js"></script>
+    <title>Kretakviss administrasjon</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="admin.js"></script>
   </head>
   <body>
     <main class="app-shell admin-shell">
       <header class="topbar">
         <div>
-          <h1>Trykkekviss</h1>
+          <h1>Kretakviss</h1>
           <p id="adminStatus" class="muted">Administrasjon</p>
         </div>
-        <a class="admin-link" href="/">Deltaker</a>
+        <a class="admin-link" href="./">Deltaker</a>
       </header>
 
       <section class="toolbar" aria-label="Quizoppsett">
@@ -56,6 +56,7 @@
             <button id="voteRoom" type="button" class="secondary">Stem</button>
             <button id="revealRoom" type="button" class="secondary">Vis fasit</button>
             <button id="clearGuesses" type="button" class="danger">Tøm svar</button>
+            <button id="resetRoom" type="button" class="danger">Nullstill rom</button>
           </div>
 
           <div class="stats-line">

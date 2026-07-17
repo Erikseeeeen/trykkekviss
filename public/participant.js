@@ -14,7 +14,8 @@ const elements = {
   mapStage: $("#mapStage"),
   fibbageStage: $("#fibbageStage"),
   submitGuess: $("#submitGuess"),
-  playerMessage: $("#playerMessage")
+  playerMessage: $("#playerMessage"),
+  leaderboardList: $("#leaderboardList")
 };
 
 let latestState = null;
@@ -23,6 +24,7 @@ let activeQuestionId = "";
 let selectedLatLng = null;
 let selectedChoiceId = "";
 let fibbageLieDraft = "";
+let fibbageLieError = "";
 let playerMap = null;
 let playerLayer = null;
 let hasJoined = false;
@@ -37,7 +39,9 @@ elements.submitGuess.addEventListener("click", submitCurrent);
 elements.fibbageStage.addEventListener("input", (event) => {
   if (event.target.matches("#fibbageLieInput")) {
     fibbageLieDraft = event.target.value;
+    fibbageLieError = "";
     updateSubmitState();
+    updateMessage(latestState?.question, latestState?.room?.state || "CLOSED");
   }
 });
 elements.fibbageStage.addEventListener("click", (event) => {
@@ -123,6 +127,7 @@ function render() {
     selectedLatLng = null;
     selectedChoiceId = "";
     fibbageLieDraft = "";
+    fibbageLieError = "";
   }
 
   elements.questionPrompt.textContent = question?.prompt || "Ingen spørsmål lastet";
@@ -133,6 +138,8 @@ function render() {
     elements.fibbageStage.classList.add("hidden");
     elements.submitGuess.disabled = true;
     elements.playerMessage.textContent = "";
+    elements.playerMessage.classList.remove("error-text");
+    renderLeaderboard(latestState?.leaderboard || []);
     return;
   }
 
@@ -148,6 +155,7 @@ function render() {
 
   updateSubmitState();
   updateMessage(question, roomState);
+  renderLeaderboard(latestState.leaderboard || []);
 }
 
 function answerCountText(question, roomState) {
@@ -200,7 +208,7 @@ function renderMap(question, guesses, roomState) {
 
   if (roomState === "OPEN" && selectedLatLng) {
     L.circleMarker([selectedLatLng.latitude, selectedLatLng.longitude], {
-      radius: 8,
+      radius: 4,
       color: "#1f6feb",
       fillColor: "#1f6feb",
       fillOpacity: 0.95,
@@ -244,10 +252,19 @@ function renderFibbage(question, fibbage, roomState) {
 
     const choices = el("div", "fibbage-choice-grid");
     for (const choice of fibbage.choices || []) {
-      const button = el("button", `fibbage-choice ${selectedChoiceId === choice.id ? "selected" : ""}`);
+      const isSelected = selectedChoiceId === choice.id;
+      const isSubmitted = fibbage.ownVote?.choiceId === choice.id;
+      const button = el("button", [
+        "fibbage-choice",
+        isSelected ? "selected" : "",
+        isSubmitted ? "submitted" : ""
+      ].filter(Boolean).join(" "));
       button.type = "button";
       button.dataset.choiceId = choice.id;
-      button.textContent = choice.text;
+      button.appendChild(el("strong", "", choice.text));
+      if (isSubmitted) {
+        button.appendChild(el("span", "choice-confirmation", "Stemt"));
+      }
       choices.appendChild(button);
     }
     stage.appendChild(choices);
@@ -397,8 +414,10 @@ function updateSubmitState() {
   }
 
   if (question.type === "fibbage" && roomState === "VOTING") {
-    elements.submitGuess.textContent = "Stem";
-    elements.submitGuess.disabled = !cleanPlayerName(elements.playerName.value) || !selectedChoiceId;
+    const submittedChoiceId = latestState?.fibbage?.ownVote?.choiceId || "";
+    const hasChangedVote = selectedChoiceId && selectedChoiceId !== submittedChoiceId;
+    elements.submitGuess.textContent = submittedChoiceId && !hasChangedVote ? "Stemt" : submittedChoiceId ? "Endre stemme" : "Stem";
+    elements.submitGuess.disabled = !cleanPlayerName(elements.playerName.value) || !selectedChoiceId || (submittedChoiceId && !hasChangedVote);
     return;
   }
 
@@ -410,22 +429,28 @@ function updateSubmitState() {
 function updateMessage(question, roomState) {
   if (!cleanPlayerName(elements.playerName.value)) {
     elements.playerMessage.textContent = "Navn mangler.";
+    elements.playerMessage.classList.remove("error-text");
     return;
   }
 
   if (question.type === "map-location") {
     elements.playerMessage.textContent = "";
+    elements.playerMessage.classList.remove("error-text");
     return;
   }
 
   if (roomState === "OPEN") {
-    elements.playerMessage.textContent = "";
+    elements.playerMessage.textContent = fibbageLieError;
+    elements.playerMessage.classList.toggle("error-text", Boolean(fibbageLieError));
   } else if (roomState === "VOTING") {
-    elements.playerMessage.textContent = "";
+    elements.playerMessage.textContent = latestState?.fibbage?.ownVote ? "Stemme registrert." : "";
+    elements.playerMessage.classList.remove("error-text");
   } else if (roomState === "REVEALED") {
     elements.playerMessage.textContent = "";
+    elements.playerMessage.classList.remove("error-text");
   } else {
     elements.playerMessage.textContent = "";
+    elements.playerMessage.classList.remove("error-text");
   }
 }
 
@@ -472,10 +497,16 @@ async function submitCurrent() {
       method: "POST",
       body: JSON.stringify(body)
     });
-    elements.playerMessage.textContent = "";
+    fibbageLieError = "";
+    elements.playerMessage.textContent = roomState === "VOTING" ? "Stemme registrert." : "";
+    elements.playerMessage.classList.remove("error-text");
     await refreshState();
   } catch (error) {
+    if (question.type === "fibbage" && roomState === "OPEN") {
+      fibbageLieError = error.message;
+    }
     elements.playerMessage.textContent = error.message;
+    elements.playerMessage.classList.toggle("error-text", question.type === "fibbage" && roomState === "OPEN");
   }
 }
 
@@ -494,6 +525,7 @@ function createLeafletMap(element) {
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
+    detectRetina: true,
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
@@ -583,6 +615,26 @@ function renderTextList(title, items) {
   return block;
 }
 
+function renderLeaderboard(scores) {
+  elements.leaderboardList.replaceChildren();
+
+  for (const [index, score] of scores.entries()) {
+    const item = el("li");
+    item.style.setProperty("--player-color", score.playerColor || "#657282");
+    item.append(
+      el("span", "leaderboard-rank", `${index + 1}`),
+      el("span", "leaderboard-name", score.playerName),
+      el("span", "leaderboard-points", `${score.total} p`),
+      el("span", "leaderboard-breakdown", scoreBreakdown(score))
+    );
+    elements.leaderboardList.appendChild(item);
+  }
+}
+
+function scoreBreakdown(score) {
+  return `${score.mapPoints || 0} kart / ${score.truthPoints || 0} fasit / ${score.foolPoints || 0} lurt`;
+}
+
 function cleanPlayerName(value) {
   return String(value).trim().replace(/\s+/g, " ").slice(0, 40);
 }
@@ -611,8 +663,8 @@ function playerAnswerIcon(guess) {
   return L.divIcon({
     className: "player-answer-icon",
     html: `<div class="player-answer-dot" style="--player-color: ${playerColor}; --answer-status-color: ${statusColor};"><span>${escapeHtml(playerName)}</span></div>`,
-    iconAnchor: [29, 29],
-    iconSize: [58, 58]
+    iconAnchor: [14.5, 14.5],
+    iconSize: [29, 29]
   });
 }
 

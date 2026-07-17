@@ -1,0 +1,24 @@
+{
+  "name": "trykkekviss",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-14",
+  "assets": {
+    "directory": "./cloudflare-upload",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "run_worker_first": true
+  },
+  "routes": [
+    {
+      "pattern": "eivind.net/kviss*",
+      "zone_name": "eivind.net"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "trykkekviss",
+      "database_id": "b34b08ec-179f-4769-a9d8-7a78f1790f6e"
+    }
+  ]
+}

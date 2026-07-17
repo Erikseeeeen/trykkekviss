@@ -3,7 +3,7 @@ export function $(selector) {
 }
 
 export async function api(path, options = {}) {
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiPath(path), {
     ...options,
     headers: {
       "content-type": "application/json",
@@ -17,6 +17,19 @@ export async function api(path, options = {}) {
   }
 
   return payload;
+}
+
+function resolveApiPath(path) {
+  if (!path.startsWith("/api/") && path !== "/api") {
+    return path;
+  }
+
+  return `${basePath()}${path}`;
+}
+
+function basePath() {
+  const firstSegment = window.location.pathname.split("/").filter(Boolean)[0];
+  return firstSegment === "kviss" ? "/kviss" : "";
 }
 
 export function stateClass(state) {

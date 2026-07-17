@@ -168,6 +168,10 @@ export async function onRequest(context) {
         return deleteQuestion(env.DB, path[2]);
       }
 
+      if (request.method === "POST" && path[1] === "room" && path[2] === "reset") {
+        return resetRoom(request, env.DB);
+      }
+
       if (request.method === "POST" && path[1] === "room") {
         return updateRoom(request, env.DB);
       }
@@ -501,8 +505,8 @@ async function submitFibbageGuess(db, body, quizSlug, roomCode, playerName, ques
       return json({ error: "Skriv en bløff før du sender inn." }, 400);
     }
 
-    if (sameFibbageText(lieText, fibbage.truth)) {
-      return json({ error: "Det er riktig svar. Prøv en troverdig bløff i stedet." }, 400);
+    if (isFibbageTruthLike(lieText, fibbage.truth)) {
+      return json({ error: "Det var fasiten. Du må nok skrive noe annet." }, 400);
     }
 
     const existingLies = await getFibbageLies(db, quizSlug, roomCode, question.id);
@@ -811,6 +815,89 @@ async function updateRoom(request, db) {
     db,
     {}
   );
+}
+
+async function resetRoom(request, db) {
+  const body = await readJson(request);
+  const quizSlug = cleanSlug(body.quizSlug || "");
+  const roomCode = cleanRoomCode(body.roomCode || "main");
+  const requestedQuestionId = body.questionId ? String(body.questionId) : null;
+
+  if (!quizSlug) {
+    return json({ error: "Quiz-ID kreves." }, 400);
+  }
+
+  const question = await resolveRoomResetQuestion(db, quizSlug, roomCode, requestedQuestionId);
+
+  if (!question) {
+    return json({ error: "Fant ingen spørsmål i denne quizen." }, 404);
+  }
+
+  await clearRoomSubmissionsAndPlayers(db, quizSlug, roomCode);
+
+  await db
+    .prepare(
+      `INSERT INTO rooms (quiz_slug, room_code, current_question_id, state, reveal_step, updated_at)
+       VALUES (?, ?, ?, 'OPEN', 0, ?)
+       ON CONFLICT (quiz_slug, room_code)
+       DO UPDATE SET
+         current_question_id = excluded.current_question_id,
+         state = excluded.state,
+         reveal_step = excluded.reveal_step,
+         updated_at = excluded.updated_at`
+    )
+    .bind(quizSlug, roomCode, question.id, new Date().toISOString())
+    .run();
+
+  return getState(
+    new Request(`https://local/api/state?quiz=${encodeURIComponent(quizSlug)}&room=${encodeURIComponent(roomCode)}&admin=1`),
+    db,
+    {}
+  );
+}
+
+async function resolveRoomResetQuestion(db, quizSlug, roomCode, requestedQuestionId) {
+  if (requestedQuestionId) {
+    const question = await db
+      .prepare(
+        `SELECT id FROM questions
+         WHERE id = ? AND quiz_slug = ? AND type IN ('map-location', 'fibbage')`
+      )
+      .bind(requestedQuestionId, quizSlug)
+      .first();
+
+    if (question) {
+      return question;
+    }
+  }
+
+  const room = await db
+    .prepare(`SELECT current_question_id FROM rooms WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .first();
+
+  if (room?.current_question_id) {
+    const roomQuestion = await db
+      .prepare(
+        `SELECT id FROM questions
+         WHERE id = ? AND quiz_slug = ? AND type IN ('map-location', 'fibbage')`
+      )
+      .bind(room.current_question_id, quizSlug)
+      .first();
+
+    if (roomQuestion) {
+      return roomQuestion;
+    }
+  }
+
+  return db
+    .prepare(
+      `SELECT id FROM questions
+       WHERE quiz_slug = ? AND type IN ('map-location', 'fibbage')
+       ORDER BY sequence_number LIMIT 1`
+    )
+    .bind(quizSlug)
+    .first();
 }
 
 async function markQuestionRevealed(db, quizSlug, roomCode, questionId) {
@@ -1606,6 +1693,29 @@ async function clearRoomQuestionSubmissions(db, quizSlug, roomCode, questionId) 
     .run();
 }
 
+async function clearRoomSubmissionsAndPlayers(db, quizSlug, roomCode) {
+  await db
+    .prepare(`DELETE FROM guesses WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .run();
+  await db
+    .prepare(`DELETE FROM fibbage_lies WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .run();
+  await db
+    .prepare(`DELETE FROM fibbage_votes WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .run();
+  await db
+    .prepare(`DELETE FROM room_question_results WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .run();
+  await db
+    .prepare(`DELETE FROM room_players WHERE quiz_slug = ? AND room_code = ?`)
+    .bind(quizSlug, roomCode)
+    .run();
+}
+
 function validateQuestionInput(type, input) {
   if (!input.quizSlug) {
     return "Quiz-ID kreves.";
@@ -1713,11 +1823,86 @@ function cleanFibbageText(value) {
 }
 
 function normalizeFibbageComparable(value) {
-  return cleanFibbageText(value).toLocaleLowerCase("nb-NO");
+  return cleanFibbageText(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("nb-NO")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
 }
 
 function sameFibbageText(a, b) {
   return normalizeFibbageComparable(a) === normalizeFibbageComparable(b);
+}
+
+function isFibbageTruthLike(lieText, truthText) {
+  const lie = normalizeFibbageComparable(lieText);
+  const truth = normalizeFibbageComparable(truthText);
+
+  if (!lie || !truth) {
+    return false;
+  }
+
+  if (lie === truth) {
+    return true;
+  }
+
+  if (truth.length >= 4 && lie.includes(truth)) {
+    return true;
+  }
+
+  if (lie.length >= 4 && truth.includes(lie) && lie.length / truth.length >= 0.45) {
+    return true;
+  }
+
+  const maxLength = Math.max(lie.length, truth.length);
+  const distance = levenshteinDistance(lie, truth);
+
+  if (maxLength <= 4) {
+    return distance <= 1;
+  }
+
+  if (maxLength <= 8) {
+    return distance <= 2;
+  }
+
+  return distance <= 2 || distance / maxLength <= 0.18;
+}
+
+function levenshteinDistance(a, b) {
+  if (a === b) {
+    return 0;
+  }
+
+  if (!a.length) {
+    return b.length;
+  }
+
+  if (!b.length) {
+    return a.length;
+  }
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let row = 1; row <= a.length; row += 1) {
+    current[0] = row;
+
+    for (let column = 1; column <= b.length; column += 1) {
+      const substitutionCost = a[row - 1] === b[column - 1] ? 0 : 1;
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + substitutionCost
+      );
+    }
+
+    for (let index = 0; index < previous.length; index += 1) {
+      previous[index] = current[index];
+    }
+  }
+
+  return previous[b.length];
 }
 
 function fibbageLieChoiceId(questionId, playerName) {
@@ -1787,19 +1972,7 @@ function sampleQuestions(slug) {
     ),
     sampleMap(
       slug,
-      "Landet Hellas omtales med sitt endonym i dagligtalen til kun et f\u00e5tall spr\u00e5k. Hvor?",
-      {
-        centerLatitude: 61,
-        centerLongitude: 8,
-        zoom: 4,
-        toleranceKm: 650,
-        correctLatitude: 61,
-        correctLongitude: 8
-      }
-    ),
-    sampleMap(
-      slug,
-      "Den albanske visekongen Muhammad Ali ble i 1821 tildelt Kreta. Hvilket st\u00f8rre omr\u00e5de kontrollerte han i tillegg?",
+      "Den albanske visekongen Muhammad Ali ble i 1821 tildelt Kreta. Hvilket omr\u00e5de ble han f\u00f8rst kronet visekonge over?",
       {
         centerLatitude: 26.82,
         centerLongitude: 30.8,
@@ -1819,6 +1992,62 @@ function sampleQuestions(slug) {
         toleranceKm: 65,
         correctLatitude: 45.4408,
         correctLongitude: 12.3155
+      }
+    ),
+    sampleMap(slug, "Hvor er Kretas h\u00f8yeste fjell?", {
+      centerLatitude: 35.25,
+      centerLongitude: 24.72,
+      zoom: 9,
+      toleranceKm: 12,
+      correctLatitude: 35.2261,
+      correctLongitude: 24.7719
+    }),
+    sampleMap(
+      slug,
+      "Hva var hovedstaden til riket som erobret Kreta i 1669?",
+      {
+        centerLatitude: 39,
+        centerLongitude: 25,
+        zoom: 5,
+        toleranceKm: 150,
+        correctLatitude: 41.0082,
+        correctLongitude: 28.9784
+      }
+    ),
+    sampleMap(
+      slug,
+      "F\u00f8nikerne bosatte seg blant annet p\u00e5 Kreta. Hvor var f\u00f8nikernes hjemland?",
+      {
+        centerLatitude: 34.3,
+        centerLongitude: 35.8,
+        zoom: 6,
+        toleranceKm: 180,
+        correctLatitude: 33.8547,
+        correctLongitude: 35.8623
+      }
+    ),
+    sampleMap(
+      slug,
+      "Hvor er den eneste kjente minoiske oksehoppingsstatuen utstilt?",
+      {
+        centerLatitude: 52,
+        centerLongitude: 0,
+        zoom: 5,
+        toleranceKm: 60,
+        correctLatitude: 51.5194,
+        correctLongitude: -0.127
+      }
+    ),
+    sampleMap(
+      slug,
+      "Hellas kom lengst i fotball-VM i 2014 da de r\u00f8k ut i \u00e5ttendedelsfinalen. Hvilket land vant?",
+      {
+        centerLatitude: 51,
+        centerLongitude: 10.5,
+        zoom: 5,
+        toleranceKm: 250,
+        correctLatitude: 51.1657,
+        correctLongitude: 10.4515
       }
     ),
     sampleFibbage(slug, "Hva het maleren El Greco egentlig?", "Dom\u00e9nikos Theotok\u00f3poulos"),
@@ -1856,6 +2085,16 @@ function sampleQuestions(slug) {
       slug,
       "Hva var if\u00f8lge myten drapsv\u00e5penet da den kretiske kong Minos ble drept?",
       "Kokende vann"
+    ),
+    sampleFibbage(
+      slug,
+      "Hva er spesielt med skriftspr\u00e5ket Linear A?",
+      "Det er ikke blitt dechiffrert"
+    ),
+    sampleFibbage(
+      slug,
+      "Hva st\u00e5r skrevet p\u00e5 graven til den greske forfatteren Nikos Kazantzakis?",
+      "Jeg h\u00e5per ingenting. Jeg frykter ingenting. Jeg er fri."
     )
   ];
 }

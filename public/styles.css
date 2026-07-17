@@ -104,6 +104,14 @@ button.danger:hover {
   border-color: var(--danger);
 }
 
+button.active-state,
+button.active-state:disabled {
+  border-color: #9fc7dd;
+  background: var(--info-soft);
+  color: var(--info);
+  opacity: 1;
+}
+
 label {
   display: grid;
   gap: 5px;
@@ -276,6 +284,64 @@ h3 {
   color: var(--muted);
 }
 
+.error-text {
+  color: var(--danger);
+  font-weight: 750;
+}
+
+.leaderboard {
+  display: grid;
+  gap: 8px;
+}
+
+.leaderboard h3 {
+  margin: 0;
+}
+
+.leaderboard-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--player-color, var(--line-strong));
+  border-radius: 6px;
+  background: var(--panel-muted);
+  padding: 8px 10px;
+}
+
+.leaderboard-rank {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.leaderboard-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 750;
+}
+
+.leaderboard-points {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.leaderboard-breakdown {
+  grid-column: 2 / 4;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
 .hidden {
   display: none !important;
 }
@@ -357,21 +423,22 @@ h3 {
 
 .player-answer-dot {
   display: flex;
-  width: 58px;
-  height: 58px;
+  width: 29px;
+  height: 29px;
   align-items: center;
   justify-content: center;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   border-radius: 50%;
   background: var(--player-color, var(--accent));
   box-shadow:
-    0 0 0 3px var(--answer-status-color, var(--line-strong)),
-    0 3px 10px rgba(17, 24, 39, 0.28);
+    0 0 0 2px var(--answer-status-color, var(--line-strong)),
+    0 2px 6px rgba(17, 24, 39, 0.22);
   color: #fff;
-  font-size: 0.62rem;
+  font-size: 0.42rem;
   font-weight: 800;
   line-height: 1.05;
-  padding: 5px;
+  opacity: 0.5;
+  padding: 2px;
   text-align: center;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.32);
 }
@@ -444,10 +511,20 @@ h3 {
 }
 
 .fibbage-stage {
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.fibbage-stage label {
+  gap: 8px;
+  color: #344253;
+  font-size: 0.86rem;
+}
+
+.fibbage-stage textarea {
+  min-height: 156px;
   background: var(--panel-muted);
-  padding: 12px;
 }
 
 .fibbage-meta {
@@ -496,6 +573,12 @@ button.fibbage-choice:hover {
   box-shadow: 0 0 0 3px rgba(20, 108, 111, 0.14);
 }
 
+.fibbage-choice.submitted {
+  border-color: #afd7c1;
+  background: var(--good-soft);
+  box-shadow: 0 0 0 3px rgba(35, 120, 79, 0.12);
+}
+
 .fibbage-choice.correct,
 .fibbage-card.correct {
   border-color: #afd7c1;
@@ -511,6 +594,17 @@ button.fibbage-choice:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.choice-confirmation {
+  justify-self: start;
+  border: 1px solid #afd7c1;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--good);
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 2px 8px;
 }
 
 .fibbage-voter {

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler pages dev public --d1=DB --compatibility-date=2026-07-14",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-cloudflare.ps1",
+    "prepare:cloudflare": "powershell -ExecutionPolicy Bypass -File ./scripts/prepare-cloudflare-upload.ps1",
     "test": "node --test"
   },
   "devDependencies": {

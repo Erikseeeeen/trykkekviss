@@ -15,6 +15,7 @@ const elements = {
   voteRoom: $("#voteRoom"),
   revealRoom: $("#revealRoom"),
   clearGuesses: $("#clearGuesses"),
+  resetRoom: $("#resetRoom"),
   submissionCount: $("#submissionCount"),
   correctCount: $("#correctCount"),
   liveMap: $("#liveMap"),
@@ -71,6 +72,7 @@ elements.questionSelect.addEventListener("change", activateSelectedQuestion);
 elements.voteRoom.addEventListener("click", () => setRoomState("VOTING"));
 elements.revealRoom.addEventListener("click", revealNext);
 elements.clearGuesses.addEventListener("click", clearAnswers);
+elements.resetRoom.addEventListener("click", resetRoom);
 elements.saveQuestion.addEventListener("click", saveQuestion);
 elements.editQuestion.addEventListener("click", editSelectedQuestion);
 elements.newQuestion.addEventListener("click", resetQuestionEditor);
@@ -174,12 +176,16 @@ function render() {
 
   const question = latestState?.question;
   elements.voteRoom.disabled = question?.type !== "fibbage" || roomState !== "OPEN";
+  elements.voteRoom.classList.toggle("active-state", question?.type === "fibbage" && roomState === "VOTING");
+  elements.voteRoom.setAttribute("aria-pressed", question?.type === "fibbage" && roomState === "VOTING" ? "true" : "false");
+  elements.voteRoom.textContent = question?.type === "fibbage" && roomState === "VOTING" ? "Stemmer" : "Stem";
   elements.revealRoom.disabled = !canRevealAnswer(question, roomState);
 
   if (!question) {
     elements.liveMap.classList.add("hidden");
     elements.liveFibbage.classList.add("hidden");
     elements.guessList.replaceChildren();
+    renderLeaderboard(latestState?.leaderboard || []);
     elements.submissionCount.textContent = "0 levert";
     elements.correctCount.textContent = "0 riktige";
     return;
@@ -474,6 +480,26 @@ function appendGuessRows(rows) {
   }
 }
 
+function renderLeaderboard(scores) {
+  elements.leaderboardList.replaceChildren();
+
+  for (const [index, score] of scores.entries()) {
+    const item = el("li");
+    item.style.setProperty("--player-color", score.playerColor || "#657282");
+    item.append(
+      el("span", "leaderboard-rank", `${index + 1}`),
+      el("span", "leaderboard-name", score.playerName),
+      el("span", "leaderboard-points", `${score.total} p`),
+      el("span", "leaderboard-breakdown", scoreBreakdown(score))
+    );
+    elements.leaderboardList.appendChild(item);
+  }
+}
+
+function scoreBreakdown(score) {
+  return `${score.mapPoints || 0} kart / ${score.truthPoints || 0} fasit / ${score.foolPoints || 0} lurt`;
+}
+
 async function setRoomState(state, options = {}) {
   const quizSlug = cleanSlug(elements.quizSlug.value);
   const roomCode = cleanRoomCode(elements.roomCode.value);
@@ -545,6 +571,31 @@ async function clearAnswers() {
       method: "POST",
       headers: adminHeaders(),
       body: JSON.stringify({ quizSlug, roomCode, questionId, state: "OPEN", clearGuesses: true })
+    });
+    await refreshState();
+  } catch (error) {
+    elements.adminStatus.textContent = error.message;
+  }
+}
+
+async function resetRoom() {
+  const quizSlug = cleanSlug(elements.quizSlug.value);
+  const roomCode = cleanRoomCode(elements.roomCode.value);
+  const questionId = latestState?.room?.currentQuestionId || elements.questionSelect.value;
+
+  if (!quizSlug) {
+    return;
+  }
+
+  if (!window.confirm("Nullstill rommet? Dette fjerner deltakere, svar, bløffer, stemmer og poeng for hele rommet.")) {
+    return;
+  }
+
+  try {
+    await api("/api/admin/room/reset", {
+      method: "POST",
+      headers: adminHeaders(),
+      body: JSON.stringify({ quizSlug, roomCode, questionId })
     });
     await refreshState();
   } catch (error) {
@@ -839,6 +890,7 @@ function createLeafletMap(element, options = {}) {
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
+    detectRetina: true,
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
@@ -954,8 +1006,8 @@ function playerAnswerIcon(guess) {
   return L.divIcon({
     className: "player-answer-icon",
     html: `<div class="player-answer-dot" style="--player-color: ${playerColor}; --answer-status-color: ${statusColor};"><span>${escapeHtml(playerName)}</span></div>`,
-    iconAnchor: [29, 29],
-    iconSize: [58, 58]
+    iconAnchor: [14.5, 14.5],
+    iconSize: [29, 29]
   });
 }
 
