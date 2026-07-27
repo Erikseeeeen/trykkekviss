@@ -1,8 +1,15 @@
 import { $, api, stateClass } from "./common.js";
 
+const ADMIN_PASSWORD = "eivind";
+const ADMIN_SESSION_KEY = "kretakviss-admin-unlocked";
 const SUPPORTED_TYPES = new Set(["map-location", "fibbage"]);
 
 const elements = {
+  adminGate: $("#adminGate"),
+  adminApp: $("#adminApp"),
+  adminPassword: $("#adminPassword"),
+  unlockAdmin: $("#unlockAdmin"),
+  adminGateMessage: $("#adminGateMessage"),
   adminKey: $("#adminKey"),
   quizSlug: $("#quizSlug"),
   quizTitle: $("#quizTitle"),
@@ -51,6 +58,7 @@ let builderMap = null;
 let builderLayer = null;
 let liveMap = null;
 let liveLayer = null;
+let adminInitialized = false;
 
 elements.adminKey.value = localStorage.getItem("trykkekviss-admin-key") || "";
 elements.quizSlug.value = localStorage.getItem("trykkekviss-admin-quiz") || elements.quizSlug.value;
@@ -68,6 +76,12 @@ elements.roomCode.addEventListener("input", () => {
 
 elements.loadQuiz.addEventListener("click", loadQuiz);
 elements.sampleQuiz.addEventListener("click", createSampleQuiz);
+elements.unlockAdmin.addEventListener("click", unlockAdmin);
+elements.adminPassword.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    unlockAdmin();
+  }
+});
 elements.questionSelect.addEventListener("change", activateSelectedQuestion);
 elements.voteRoom.addEventListener("click", () => setRoomState("VOTING"));
 elements.revealRoom.addEventListener("click", revealNext);
@@ -94,8 +108,41 @@ document.querySelectorAll("[data-question-type]").forEach((button) => {
   button.addEventListener("click", () => setQuestionType(button.dataset.questionType));
 });
 
-refreshBuilderMap();
-loadQuiz();
+if (isAdminUnlocked()) {
+  unlockAdmin({ silent: true });
+} else {
+  showAdminGate();
+}
+
+function isAdminUnlocked() {
+  return window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+}
+
+function showAdminGate() {
+  elements.adminApp.classList.add("hidden");
+  elements.adminGate.classList.remove("hidden");
+  requestAnimationFrame(() => elements.adminPassword.focus());
+}
+
+function unlockAdmin(options = {}) {
+  const password = elements.adminPassword.value.trim();
+
+  if (!options.silent && password !== ADMIN_PASSWORD) {
+    elements.adminGateMessage.textContent = "Feil passord.";
+    elements.adminPassword.select();
+    return;
+  }
+
+  window.sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+  elements.adminGate.classList.add("hidden");
+  elements.adminApp.classList.remove("hidden");
+
+  if (!adminInitialized) {
+    adminInitialized = true;
+    refreshBuilderMap();
+    loadQuiz();
+  }
+}
 
 async function loadQuiz() {
   const quizSlug = cleanSlug(elements.quizSlug.value);

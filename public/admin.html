@@ -10,7 +10,26 @@
     <script type="module" src="admin.js"></script>
   </head>
   <body>
-    <main class="app-shell admin-shell">
+    <section id="adminGate" class="app-shell admin-gate">
+      <div class="panel">
+        <div class="section-title">
+          <div>
+            <h1>Kretakviss</h1>
+            <p class="muted">Administrasjon</p>
+          </div>
+        </div>
+        <label>
+          Passord
+          <input id="adminPassword" type="password" autocomplete="current-password">
+        </label>
+        <div class="actions">
+          <button id="unlockAdmin" type="button">Åpne</button>
+          <span id="adminGateMessage" class="muted"></span>
+        </div>
+      </div>
+    </section>
+
+    <main id="adminApp" class="app-shell admin-shell hidden">
       <header class="topbar">
         <div>
           <h1>Kretakviss</h1>

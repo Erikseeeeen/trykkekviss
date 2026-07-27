@@ -176,9 +176,21 @@ h3 {
   width: min(1280px, calc(100% - 32px));
 }
 
+.spectator-shell {
+  width: min(960px, calc(100% - 32px));
+}
+
+.admin-gate {
+  display: grid;
+  min-height: 100vh;
+  width: min(420px, calc(100% - 32px));
+  align-content: center;
+}
+
 .topbar,
 .toolbar,
 .question-header,
+.question-meta,
 .section-title,
 .actions,
 .button-row,
@@ -231,6 +243,11 @@ h3 {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
+}
+
+.question-meta {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .question-header > div,
@@ -633,13 +650,15 @@ button.fibbage-choice:hover {
 
 @media (max-width: 620px) {
   .app-shell,
-  .admin-shell {
+  .admin-shell,
+  .spectator-shell {
     width: min(100% - 18px, 1280px);
     padding-top: 12px;
   }
 
   .topbar,
   .question-header,
+  .question-meta,
   .section-title,
   .stats-line {
     align-items: stretch;

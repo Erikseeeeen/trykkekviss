@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kretakviss visning</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="spectate.js"></script>
+  </head>
+  <body>
+    <main class="app-shell spectator-shell">
+      <header class="topbar">
+        <div>
+          <h1>Kretakviss</h1>
+          <p class="muted">Tilskuermodus</p>
+        </div>
+        <a class="admin-link" href="./">Deltaker</a>
+      </header>
+
+      <section class="question-area">
+        <div class="question-header">
+          <div>
+            <h2 id="questionPrompt">Laster spørsmål</h2>
+          </div>
+          <div class="question-meta">
+            <span id="liveState" class="badge">Venter</span>
+            <span id="answerCount" class="count">0 svar</span>
+          </div>
+        </div>
+
+        <div id="mapStage" class="map-stage hidden"></div>
+        <div id="fibbageStage" class="fibbage-stage hidden"></div>
+
+        <p id="spectatorMessage" class="muted"></p>
+
+        <div class="leaderboard">
+          <h3>Poengtavle</h3>
+          <ol id="leaderboardList" class="leaderboard-list"></ol>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

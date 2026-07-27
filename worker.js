@@ -24,6 +24,10 @@ export default {
       return Response.redirect(`${url.origin}${BASE_PATH}/admin`, 308);
     }
 
+    if (strippedPath === "/spectate/") {
+      return Response.redirect(`${url.origin}${BASE_PATH}/spectate`, 308);
+    }
+
     return env.ASSETS.fetch(rewriteAssetRequest(request, strippedPath));
   }
 };
@@ -48,6 +52,8 @@ function rewriteAssetRequest(request, strippedPath) {
     assetPath = "/index.html";
   } else if (assetPath === "/admin" || assetPath === "/admin/") {
     assetPath = "/admin.html";
+  } else if (assetPath === "/spectate" || assetPath === "/spectate/") {
+    assetPath = "/spectate.html";
   }
 
   url.pathname = assetPath;

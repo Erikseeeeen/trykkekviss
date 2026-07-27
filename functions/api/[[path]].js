@@ -1,3 +1,5 @@
+import { shuffleFibbageRevealChoices } from "../_shared/fibbage.js";
+
 const STATES = new Set(["OPEN", "VOTING", "REVEALING", "CLOSED", "REVEALED"]);
 const QUESTION_TYPES = new Set(["map-location", "fibbage"]);
 const TRUTH_CHOICE_ID = "truth";
@@ -1347,12 +1349,16 @@ async function getFibbageState(db, quizSlug, roomCode, question, options) {
   const votes = await getFibbageVotes(db, quizSlug, roomCode, question.id);
   const choices = await getFibbageChoices(db, quizSlug, roomCode, question);
   const falseChoices = choices.filter((choice) => !choice.isTruth);
+  const revealChoices = shuffleFibbageRevealChoices(
+    falseChoices,
+    fibbageRevealSeed(quizSlug, roomCode, question.id, falseChoices)
+  );
   const revealStep = fullyRevealed
     ? falseChoices.length
     : state === "REVEALING"
       ? clampRevealStep(options.revealStep, falseChoices.length)
       : 0;
-  const poppedChoiceIds = new Set(falseChoices.slice(0, revealStep).map((choice) => choice.id));
+  const poppedChoiceIds = new Set(revealChoices.slice(0, revealStep).map((choice) => choice.id));
   const playerByName = new Map(players.map((player) => [cleanPlayerName(player.playerName), player]));
   const ownLie = playerName
     ? lies.find((lie) => cleanPlayerName(lie.playerName) === playerName)
@@ -1565,7 +1571,8 @@ async function getFibbageChoices(db, quizSlug, roomCode, question) {
       text: lie.text,
       source: "lie",
       author: lie.playerName,
-      isTruth: false
+      isTruth: false,
+      submittedAt: lie.submittedAt
     });
   }
 
@@ -1598,6 +1605,15 @@ function publicFibbageChoice(choice, options = {}) {
   }
 
   return dto;
+}
+
+function fibbageRevealSeed(quizSlug, roomCode, questionId, falseChoices) {
+  const submissions = falseChoices
+    .map((choice) => `${choice.id}:${choice.submittedAt || ""}`)
+    .sort()
+    .join("|");
+
+  return `${quizSlug}|${roomCode}|${questionId}|${submissions}`;
 }
 
 function clampRevealStep(value, max) {
